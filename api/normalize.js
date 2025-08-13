@@ -36,13 +36,14 @@ function nextWeekday(base, targetIdx) {
 
 function parseRelativeDate(base, text) {
   const low = String(text||'').toLowerCase();
+  const today = new Date(base);
 
-  if (/\btoday\b/.test(low)) return new Date(base);
+  if (/\btoday\b/.test(low)) return today;
+
   if (/\btomorrow\b/.test(low)) {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    return tomorrow;
   }
 
   const wds = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
@@ -59,9 +60,9 @@ function parseRelativeDate(base, text) {
   }
 
   const md = low.match(/\b(\d{1,2})[\/\-](\d{1,2})\b/);
-  if (md) return new Date(base.getFullYear(), parseInt(md[1],10)-1, parseInt(md[2],10));
+  if (md) return new Date(today.getFullYear(), parseInt(md[1],10)-1, parseInt(md[2],10));
 
-  return new Date(base);
+  return today;
 }
 
 module.exports = (req, res) => {
@@ -77,8 +78,14 @@ module.exports = (req, res) => {
     const start = new Date(day);
     start.setHours(t.hour, t.minute, 0, 0);
 
+    // Force year to be current or future
     const curYear = base.getFullYear();
     if (start.getFullYear() < curYear) start.setFullYear(curYear);
+
+    // If date is still in the past (e.g. “August 12” on Aug 13), bump to next year
+    if (start < base) {
+      start.setFullYear(start.getFullYear() + 1);
+    }
 
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
 
