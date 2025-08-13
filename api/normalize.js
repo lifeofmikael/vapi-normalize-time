@@ -38,7 +38,12 @@ function parseRelativeDate(base, text) {
   const low = String(text||'').toLowerCase();
 
   if (/\btoday\b/.test(low)) return new Date(base);
-  if (/\btomorrow\b/.test(low)) { const d = new Date(base); d.setDate(d.getDate()+1); return d; }
+  if (/\btomorrow\b/.test(low)) {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
 
   const wds = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
   const wd = wds.find(w => new RegExp(`\\bnext\\s+${w}\\b`).test(low));
@@ -94,4 +99,3 @@ module.exports = (req, res) => {
     res.status(500).json({ error: e && e.message ? e.message : 'normalize failed' });
   }
 };
-
